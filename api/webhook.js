@@ -1,16 +1,36 @@
 // /api/webhook.js
+
+// 關閉 Next.js 自動 body parser
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(200).send("LINE Webhook OK");
     return;
   }
-  // 這裡不管有沒有錯都要 200 回傳
   try {
-    // 你可以放 log 看 body
-    // console.log("收到:", req.body);
-    res.status(200).send("OK"); // 立刻回 200
-    // ...這之後才做任何事
+    // 手動讀 raw body
+    let body = "";
+    await new Promise((resolve) => {
+      req.on("data", (chunk) => {
+        body += chunk;
+      });
+      req.on("end", resolve);
+    });
+    const json = JSON.parse(body || "{}");
+
+    // 立刻回 200
+    res.status(200).send("OK");
+
+    // 下面可加 log
+    // console.log("收到:", json);
+
+    // ...未來你要的處理可以加在這
   } catch (e) {
-    res.status(200).send("OK"); // 任何錯誤都要回 200
+    res.status(200).send("OK");
   }
 }
